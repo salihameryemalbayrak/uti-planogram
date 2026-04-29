@@ -24,10 +24,8 @@ class Planogram(Component):
         self.inputTestDetections = self.request.get_param("inputTestDetections")
         self.featureWeight = self.request.get_param("featureWeight")
         self.iouWeight = self.request.get_param("iouWeight")
-        self.inputImage = self.request.get_param("inputImage")
         print(self.featureWeight)
         print(self.iouWeight)
-        print(self.inputImage)
 
         print("merhaba")
 
