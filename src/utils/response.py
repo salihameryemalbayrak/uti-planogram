@@ -1,14 +1,14 @@
 
 from sdks.novavision.src.helper.package import PackageHelper
-from components.Package.src.models.PackageModel import PackageModel, PackageConfigs, ConfigExecutor, PackageOutputs, PackageResponse, PackageExecutor, OutputImage
+from components.Package.src.models.PackageModel import PackageModel, PackageConfigs, ConfigExecutor, PlanogramOutputs, PlanogramResponse, PlanogramExecutor, OutputData
 
 
 def build_response(context):
-    outputImage = OutputImage(value=context.image)
-    Outputs = PackageOutputs(outputImage=outputImage)
-    packageResponse = PackageResponse(outputs=Outputs)
-    packageExecutor = PackageExecutor(value=packageResponse)
-    executor = ConfigExecutor(value=packageExecutor)
+    outputData = OutputData(value=context.image)
+    outputs = PlanogramOutputs(outputImage=outputData)
+    planogramResponse = PlanogramResponse(outputs=outputs)
+    planogramExecutor = PlanogramExecutor(value=planogramResponse)
+    executor = ConfigExecutor(value=planogramExecutor)
     packageConfigs = PackageConfigs(executor=executor)
     package = PackageHelper(packageModel=PackageModel, packageConfigs=packageConfigs)
     packageModel = package.build_model(context)
