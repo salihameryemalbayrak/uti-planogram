@@ -3,15 +3,12 @@ from pydantic import Field, validator
 from typing import List, Optional, Union, Literal
 from sdks.novavision.src.base.model import Package, Image, Inputs, Configs, Outputs, Response, Detection, Request, Output, Input, Config
 
-class ReferenceImage(Input):
-    name: Literal["referenceImage"] = "referenceImage"
-    value: Union[List[Image], Image]
-    type: str = "object"
-
-class TestImage(Input):
-    name: Literal["testImage"] = "testImage"
-    value: Union[List[Image], Image]
-    type: str = "object"
+class InputImage(Input):
+    name: Literal["inputImage"] = "inputImage"
+    value: Union[Image, List[Image]]
+    type: Literal["object"] = "object"
+    class Config:
+        title = "Image"
 
 class InputReferenceDetections(Input):
     name: Literal["inputReferenceDetections"] = "inputReferenceDetections"
@@ -63,8 +60,7 @@ class IouWeight(Config):
 class PlanogramInputs(Inputs):
     inputReferenceDetections: InputReferenceDetections
     inputTestDetections: InputTestDetections
-    testImage: TestImage
-    referenceImage: ReferenceImage
+    inputImage: InputImage
 
 
 class PlanogramConfigs(Configs):

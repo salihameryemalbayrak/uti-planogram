@@ -28,8 +28,8 @@ class Planogram(Component):
         self.testImage = self.request.get_param("testImage")
         print(self.featureWeight)
         print(self.iouWeight)
-        print(self.inputReferenceDetections)
-        print(self.inputTestDetections)
+        print(self.inputImage)
+
         print("merhaba")
 
     @staticmethod
