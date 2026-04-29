@@ -24,6 +24,11 @@ class Planogram(Component):
         self.inputTestDetections = self.request.get_param("inputTestDetections")
         self.featureWeight = self.request.get_param("featureWeight")
         self.iouWeight = self.request.get_param("iouWeight")
+        print(self.featureWeight)
+        print(self.iouWeight)
+        print(self.inputReferenceDetections)
+        print(self.inputTestDetections)
+        print("merhaba")
 
     @staticmethod
     def bootstrap(config: dict) -> dict:
