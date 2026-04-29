@@ -5,8 +5,8 @@ from sdks.novavision.src.base.model import Package, Image, Inputs, Configs, Outp
 
 class ReferenceImage(Input):
     name: Literal["referenceImage"] = "referenceImage"
-    value: Union[List[Image], Image]
-    type: str = "object"
+    value: Union[Image, List[Image]]
+    type: Literal["object"] = "object"
 
     class Config:
         title = "referenceImage"
@@ -14,8 +14,8 @@ class ReferenceImage(Input):
 
 class TestImage(Input):
     name: Literal["testImage"] = "testImage"
-    value: Union[List[Image], Image]
-    type: str = "object"
+    value: Union[Image, List[Image]]
+    type: Literal["object"] = "object"
 
     class Config:
         title = "testImage"
