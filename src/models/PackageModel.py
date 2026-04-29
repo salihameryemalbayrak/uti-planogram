@@ -69,8 +69,7 @@ class IouWeight(Config):
 class PlanogramInputs(Inputs):
     inputReferenceDetections: InputReferenceDetections
     inputTestDetections: InputTestDetections
-    testImage: TestImage
-    referenceImage: ReferenceImage
+    inputImage: InputImage
 
 
 class PlanogramConfigs(Configs):
