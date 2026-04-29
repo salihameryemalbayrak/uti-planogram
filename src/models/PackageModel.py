@@ -3,13 +3,12 @@ from pydantic import Field, validator
 from typing import List, Optional, Union, Literal
 from sdks.novavision.src.base.model import Package, Image, Inputs, Configs, Outputs, Response, Detection, Request, Output, Input, Config
 
-class ReferenceImage(Input):
-    name: Literal["referenceImage"] = "referenceImage"
+class InputImage(Input):
+    name: Literal["inputImage"] = "inputImage"
     value: Union[Image, List[Image]]
     type: Literal["object"] = "object"
-
     class Config:
-        title = "referenceImage"
+        title = "Image"
 
 
 class TestImage(Input):
