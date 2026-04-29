@@ -10,15 +10,6 @@ class InputImage(Input):
     class Config:
         title = "Image"
 
-
-class TestImage(Input):
-    name: Literal["testImage"] = "testImage"
-    value: Union[Image, List[Image]]
-    type: Literal["object"] = "object"
-
-    class Config:
-        title = "testImage"
-
 class InputReferenceDetections(Input):
     name: Literal["inputReferenceDetections"] = "inputReferenceDetections"
     value: List[Detection]
