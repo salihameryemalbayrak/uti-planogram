@@ -31,7 +31,7 @@ class FeatureWeight(Config):
         ...
     """
     name: Literal["featureWeight"] = "featureWeight"
-    value: str
+    value: float
     type: Literal["string"] = "string"
     field: Literal["textInput"] = "textInput"
 
@@ -43,7 +43,7 @@ class IouWeight(Config):
         ...
     """
     name: Literal["iouWeight"] = "iouWeight"
-    value: str
+    value: float
     type: Literal["string"] = "string"
     field: Literal["textInput"] = "textInput"
 
