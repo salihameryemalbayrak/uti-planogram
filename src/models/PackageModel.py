@@ -52,6 +52,21 @@ class InputTestDetections(Input):
     class Config:
         title = "Test"
 
+class OutputImage(Output):
+    name: Literal["outputImage"] = "outputImage"
+    value: Union[List[Image], Image]
+    type: str = "object"
+
+    @validator("type", pre=True, always=True)
+    def set_type_based_on_value(cls, value, values):
+        value = values.get('value')
+        if isinstance(value, Image):
+            return "object"
+        elif isinstance(value, list):
+            return "list"
+
+    class Config:
+        title = "Image"
 
 class OutputData(Output):
     name: Literal["outputData"] = "outputData"
@@ -97,6 +112,7 @@ class PlanogramConfigs(Configs):
 
 class PlanogramOutputs(Outputs):
     outputData: OutputData
+    outputImage: OutputImage
 
 
 class PlanogramRequest(Request):
