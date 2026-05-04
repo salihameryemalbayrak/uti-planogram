@@ -24,6 +24,8 @@ class Planogram(Component):
         self.inputTestDetections = self.request.get_param("inputTestDetections")
         self.featureWeight = self.request.get_param("featureWeight")
         self.iouWeight = self.request.get_param("iouWeight")
+        self.inputImageOne = self.request.get_param("inputImageOne")
+        self.inputImageTwo = self.request.get_param("inputImageTwo")
         print(self.featureWeight)
         print(self.iouWeight)
 
@@ -34,7 +36,8 @@ class Planogram(Component):
         return {}
 
     def run(self):
-
+        self.image = self.inputImageOne
+        self.outputData = self.featureWeight
 
         packageModel = build_response(context=self)
         return packageModel
