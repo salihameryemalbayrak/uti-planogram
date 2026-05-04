@@ -3,19 +3,38 @@ from pydantic import Field, validator
 from typing import List, Optional, Union, Literal
 from sdks.novavision.src.base.model import Package, Image, Inputs, Configs, Outputs, Response, Detection, Request, Output, Input, Config
 
-class InputImage(Input):
-    name: Literal["inputImage"] = "inputImage"
-    value: Union[Image, List[Image]]
-    type: Literal["object"] = "object"
+class InputImageOne(Input):
+    name: Literal["inputImageOne"] = "inputImageOne"
+    value: Union[List[Image], Image]
+    type: str = "object"
+
+    @validator("type", pre=True, always=True)
+    def set_type_based_on_value(cls, value, values):
+        value = values.get('value')
+        if isinstance(value, Image):
+            return "object"
+        elif isinstance(value, list):
+            return "list"
+
     class Config:
         title = "Image"
 
-class InputImageA(Input):
-    name: Literal["inputImage"] = "inputImageA"
-    value: Union[Image, List[Image]]
-    type: Literal["object"] = "object"
+
+class InputImageTwo(Input):
+    name: Literal["inputImageTwo"] = "inputImageTwo"
+    value: Union[List[Image], Image]
+    type: str = "object"
+
+    @validator("type", pre=True, always=True)
+    def set_type_based_on_value(cls, value, values):
+        value = values.get('value')
+        if isinstance(value, Image):
+            return "object"
+        elif isinstance(value, list):
+            return "list"
+
     class Config:
-        title = "ImageA"
+        title = "Image"
 
 class InputReferenceDetections(Input):
     name: Literal["inputReferenceDetections"] = "inputReferenceDetections"
@@ -67,8 +86,8 @@ class IouWeight(Config):
 class PlanogramInputs(Inputs):
     inputReferenceDetections: InputReferenceDetections
     inputTestDetections: InputTestDetections
-    inputImage: InputImage
-    inputImageA: InputImageA
+    inputImageTwo: InputImageTwo
+    inputImageOne: InputImageOne
 
 
 class PlanogramConfigs(Configs):
