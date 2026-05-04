@@ -10,6 +10,13 @@ class InputImage(Input):
     class Config:
         title = "Image"
 
+class InputImageA(Input):
+    name: Literal["inputImage"] = "inputImageA"
+    value: Union[Image, List[Image]]
+    type: Literal["object"] = "object"
+    class Config:
+        title = "ImageA"
+
 class InputReferenceDetections(Input):
     name: Literal["inputReferenceDetections"] = "inputReferenceDetections"
     value: List[Detection]
@@ -61,6 +68,7 @@ class PlanogramInputs(Inputs):
     inputReferenceDetections: InputReferenceDetections
     inputTestDetections: InputTestDetections
     inputImage: InputImage
+    inputImageA: InputImageA
 
 
 class PlanogramConfigs(Configs):
