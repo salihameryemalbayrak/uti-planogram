@@ -82,6 +82,17 @@ class IouWeight(Config):
     class Config:
         title = "iouWeight"
 
+class Treshold(Config):
+    """
+        ...
+    """
+    name: Literal["treshold"] = "treshold"
+    value: float
+    type: Literal["string"] = "string"
+    field: Literal["textInput"] = "textInput"
+
+    class Config:
+        title = "Treshold"
 
 class PlanogramInputs(Inputs):
     inputReferenceDetections: InputReferenceDetections
@@ -93,6 +104,7 @@ class PlanogramInputs(Inputs):
 class PlanogramConfigs(Configs):
     iouWeight: IouWeight
     featureWeight: FeatureWeight
+    treshold: Treshold
 
 
 class PlanogramOutputs(Outputs):

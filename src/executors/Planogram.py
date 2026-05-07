@@ -21,16 +21,15 @@ class Planogram(Component):
         self.request.model = PackageModel(**(self.request.data))
 
         self.inputReferenceDetections = self.request.get_param("inputReferenceDetections")
-        self.inputTestDetections      = self.request.get_param("inputTestDetections")
-        self.featureWeight            = self.request.get_param("featureWeight")
-        self.iouWeight                = self.request.get_param("iouWeight")
-        self.inputImageOne            = self.request.get_param("inputImageOne")
-        self.inputImageTwo            = self.request.get_param("inputImageTwo")
-        print(self.inputImageOne)
-        print(self.inputImageTwo)
+        self.inputTestDetections = self.request.get_param("inputTestDetections")
+        self.featureWeight = self.request.get_param("featureWeight")
+        self.iouWeight = self.request.get_param("iouWeight")
+        self.inputImageOne  = self.request.get_param("inputImageOne")
+        self.inputImageTwo = self.request.get_param("inputImageTwo")
+        self.treshold = self.request.get_param("treshold")
         self.clip_model = bootstrap["clip_model"]
-        self.processor  = bootstrap["processor"]
-        self.device     = bootstrap["device"]
+        self.processor = bootstrap["processor"]
+        self.device = bootstrap["device"]
 
     @staticmethod
     def bootstrap(config: dict) -> dict:
@@ -56,7 +55,7 @@ class Planogram(Component):
 
         iou_weight     = float(self.iouWeight)
         feature_weight = float(self.featureWeight)
-        THRESHOLD      = 0.20
+        THRESHOLD      = float(self.treshold)
 
         # ── Görüntüleri Redis'ten oku ──
         ref_frame  = Image.get_frame(img=self.inputImageOne, redis_db=self.redis_db)
