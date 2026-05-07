@@ -60,7 +60,8 @@ class OutputData(Output):
 
 class FeatureWeight(Config):
     """
-        ...
+        Weight multiplier applied to the visual feature similarity score (extracted via CLIP embeddings)
+        when calculating the combined compatibility score between reference and test detections.
     """
     name: Literal["featureWeight"] = "featureWeight"
     value: float
@@ -68,11 +69,12 @@ class FeatureWeight(Config):
     field: Literal["textInput"] = "textInput"
 
     class Config:
-        title = "featureWeight"
+        title = "Visual similarity weight."
 
 class IouWeight(Config):
     """
-        ...
+       Weight multiplier applied to the spatial Intersection over Union (IoU) overlap score
+       when calculating the combined compatibility score between reference and test detections.
     """
     name: Literal["iouWeight"] = "iouWeight"
     value: float
@@ -80,11 +82,12 @@ class IouWeight(Config):
     field: Literal["textInput"] = "textInput"
 
     class Config:
-        title = "iouWeight"
+        title = "Spatial overlap weight."
 
 class Treshold(Config):
     """
-        ...
+       The minimum combined score (IoU + Feature similarity) required for a reference
+       and test detection pair to be considered a successful match.
     """
     name: Literal["treshold"] = "treshold"
     value: float
