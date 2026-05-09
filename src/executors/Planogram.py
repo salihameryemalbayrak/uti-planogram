@@ -5,6 +5,11 @@
 import os
 import cv2
 import sys
+import torch
+import numpy as np
+from PIL import Image as PILImage
+from scipy.optimize import linear_sum_assignment
+from transformers import CLIPModel, CLIPProcessor
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../../../'))
 
@@ -33,9 +38,6 @@ class Planogram(Capsule):
 
     @staticmethod
     def bootstrap(config: dict) -> dict:
-        import torch
-        from transformers import CLIPModel, CLIPProcessor
-
         device     = "cuda" if torch.cuda.is_available() else "cpu"
         clip_model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
         processor  = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
@@ -48,16 +50,10 @@ class Planogram(Capsule):
         }
 
     def run(self):
-        import torch
-        import numpy as np
-        from PIL import Image as PILImage
-        from scipy.optimize import linear_sum_assignment
-
         iou_weight     = float(self.iouWeight)
         feature_weight = float(self.featureWeight)
         THRESHOLD      = float(self.treshold)
 
-        # ── Görüntüleri Redis'ten oku ──
         ref_frame  = Image.get_frame(img=self.inputImageOne, redis_db=self.redis_db)
         curr_frame = Image.get_frame(img=self.inputImageTwo, redis_db=self.redis_db)
 
@@ -67,7 +63,6 @@ class Planogram(Capsule):
         ref_pil  = PILImage.fromarray(ref_np[..., ::-1])
         curr_pil = PILImage.fromarray(curr_np[..., ::-1])
 
-        # ── Detection parse — tüm sınıflar ──
         def parse_boxes(detections):
             boxes = []
             for d in detections:
@@ -85,17 +80,6 @@ class Planogram(Capsule):
         n_ref  = len(ref_boxes)
         n_curr = len(curr_boxes)
 
-        print(f"n_ref: {n_ref}  n_curr: {n_curr}")
-        print("REF BOXES:", ref_boxes[:3])
-        print("CURR BOXES:", curr_boxes[:3])
-        print("REF PIL SIZE:", ref_pil.size)
-
-        if n_ref == 0 or n_curr == 0:
-            self.request.data["compatibilityScore"] = 0.0
-            self.data = "0.0"
-            return build_response(context=self)
-
-        # ── Batch CLIP embedding ──
         def get_embeddings(pil_image, boxes):
             crops = []
             for box in boxes:
@@ -120,7 +104,6 @@ class Planogram(Capsule):
         ref_embs  = get_embeddings(ref_pil,  ref_boxes)
         curr_embs = get_embeddings(curr_pil, curr_boxes)
 
-        # ── IoU matrisi ──
         def compute_iou(b1, b2):
             x1 = max(b1[0], b2[0]);  y1 = max(b1[1], b2[1])
             x2 = min(b1[2], b2[2]);  y2 = min(b1[3], b2[3])
@@ -135,17 +118,10 @@ class Planogram(Capsule):
             for j, cb in enumerate(curr_boxes):
                 iou_mat[i, j] = compute_iou(rb, cb)
 
-        # ── Feature matrisi ──
         feature_mat = (ref_embs @ curr_embs.T + 1) / 2
 
-        # ── Birleştir + Hungarian ──
         combined         = iou_weight * iou_mat + feature_weight * feature_mat
         row_ind, col_ind = linear_sum_assignment(1 - combined)
-
-        # ── Skorları yazdır ──
-        print("=== COMBINED SKORLAR ===")
-        for r, c in zip(row_ind, col_ind):
-            print(f"  [{r}↔{c}]  iou:{iou_mat[r,c]:.3f}  feat:{feature_mat[r,c]:.3f}  combined:{combined[r,c]:.3f}")
 
         matched_count = sum(
             1 for r, c in zip(row_ind, col_ind)
@@ -153,8 +129,6 @@ class Planogram(Capsule):
         )
 
         compatibility_score = round(matched_count / n_ref * 100, 2)
-        print(f"=== SONUÇ: {compatibility_score} ===")
-
         self.request.data["compatibilityScore"] = compatibility_score
         self.data = str(compatibility_score)
 
