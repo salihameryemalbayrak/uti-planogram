@@ -1,6 +1,6 @@
 
 from sdks.novavision.src.helper.package import PackageHelper
-from components.Planogram.src.models.PackageModel import PackageModel, PackageConfigs, ConfigExecutor, PlanogramOutputs, PlanogramResponse, PlanogramExecutor, OutputData
+from capsules.Planogram.src.models.PackageModel import PackageModel, PackageConfigs, ConfigExecutor, PlanogramOutputs, PlanogramResponse, PlanogramExecutor, OutputData
 
 
 def build_response(context):
