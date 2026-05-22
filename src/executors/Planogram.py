@@ -1,5 +1,5 @@
 """
-    Planogram comparison capsule using CLIP for feature matching
+    Planogram comparison capsule using CLIP embeddings from ClipImage
 """
 
 import os
@@ -25,44 +25,26 @@ class Planogram(Capsule):
         super().__init__(request, bootstrap)
         self.request.model = PackageModel(**(self.request.data))
 
-        self.inputReferenceDetections = self.request.get_param("inputReferenceDetections")
-        self.inputTestDetections = self.request.get_param("inputTestDetections")
-        self.featureWeight = self.request.get_param("featureWeight")
-        self.iouWeight = self.request.get_param("iouWeight")
-        self.inputImageOne  = self.request.get_param("inputImageOne")
-        self.inputImageTwo = self.request.get_param("inputImageTwo")
-        self.treshold = self.request.get_param("treshold")
-        self.clip_model = bootstrap["clip_model"]
-        self.processor = bootstrap["processor"]
-        self.device = bootstrap["device"]
+        self.inputReferenceDetections  = self.request.get_param("inputReferenceDetections")
+        self.inputTestDetections       = self.request.get_param("inputTestDetections")
+        self.inputReferenceEmbeddings  = self.request.get_param("inputReferenceEmbeddings")  # ClipImage çıktısı
+        self.inputTestEmbeddings       = self.request.get_param("inputTestEmbeddings")        # ClipImage çıktısı
+        self.featureWeight             = self.request.get_param("featureWeight")
+        self.iouWeight                 = self.request.get_param("iouWeight")
+        self.treshold                  = self.request.get_param("treshold")
 
     @staticmethod
     def bootstrap(config: dict) -> dict:
-        device     = "cuda" if torch.cuda.is_available() else "cpu"
-        clip_model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32")
-        processor  = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
-        clip_model = clip_model.to(device).eval()
-
-        return {
-            "clip_model": clip_model,
-            "processor":  processor,
-            "device":     device,
-        }
+        return {}
 
     def run(self):
         iou_weight     = float(self.iouWeight)
         feature_weight = float(self.featureWeight)
         THRESHOLD      = float(self.treshold)
 
-        ref_frame  = Image.get_frame(img=self.inputImageOne, redis_db=self.redis_db)
-        curr_frame = Image.get_frame(img=self.inputImageTwo, redis_db=self.redis_db)
+        compatibility_score = 0.0
 
-        ref_np  = np.asarray(ref_frame.value).astype(np.uint8)
-        curr_np = np.asarray(curr_frame.value).astype(np.uint8)
-
-        ref_pil  = PILImage.fromarray(ref_np[..., ::-1])
-        curr_pil = PILImage.fromarray(curr_np[..., ::-1])
-
+        # ── Detection parse ──
         def parse_boxes(detections):
             boxes = []
             for d in detections:
@@ -74,36 +56,25 @@ class Planogram(Capsule):
                 boxes.append([x1, y1, x2, y2])
             return boxes
 
-        ref_boxes  = parse_boxes(self.inputReferenceDetections)
+        # ── Embedding parse — ClipImage çıktısı ──
+        def parse_embeddings(embeddings):
+            return np.array([e["embedding"] for e in embeddings])
+
+        ref_boxes = parse_boxes(self.inputReferenceDetections)
         curr_boxes = parse_boxes(self.inputTestDetections)
 
         n_ref  = len(ref_boxes)
         n_curr = len(curr_boxes)
 
-        def get_embeddings(pil_image, boxes):
-            crops = []
-            for box in boxes:
-                x1 = max(0, int(box[0]));  y1 = max(0, int(box[1]))
-                x2 = min(pil_image.width,  int(box[2]))
-                y2 = min(pil_image.height, int(box[3]))
-                if x2 <= x1 or y2 <= y1:
-                    crops.append(PILImage.new("RGB", (224, 224)))
-                    continue
-                crops.append(pil_image.crop((x1, y1, x2, y2)))
+        if n_ref == 0 or n_curr == 0:
+            self.request.data["compatibilityScore"] = compatibility_score
+            self.data = str(compatibility_score)
+            return build_response(context=self)
 
-            inputs = self.processor(images=crops, return_tensors="pt", padding=True)
-            inputs = {k: v.to(self.device) for k, v in inputs.items()}
+        ref_embs  = parse_embeddings(self.inputReferenceEmbeddings)
+        curr_embs = parse_embeddings(self.inputTestEmbeddings)
 
-            with torch.no_grad():
-                outputs = self.clip_model.get_image_features(**inputs)
-                embs    = outputs if isinstance(outputs, torch.Tensor) else outputs.pooler_output
-                embs    = embs / embs.norm(p=2, dim=-1, keepdim=True)
-
-            return embs.cpu().numpy()
-
-        ref_embs  = get_embeddings(ref_pil,  ref_boxes)
-        curr_embs = get_embeddings(curr_pil, curr_boxes)
-
+        # ── IoU matrisi ──
         def compute_iou(b1, b2):
             x1 = max(b1[0], b2[0]);  y1 = max(b1[1], b2[1])
             x2 = min(b1[2], b2[2]);  y2 = min(b1[3], b2[3])
@@ -118,8 +89,16 @@ class Planogram(Capsule):
             for j, cb in enumerate(curr_boxes):
                 iou_mat[i, j] = compute_iou(rb, cb)
 
+        # ── Feature matrisi ──
+        # Embedding'ler normalize edilmemişse normalize et
+        ref_norms  = np.linalg.norm(ref_embs,  axis=1, keepdims=True)
+        curr_norms = np.linalg.norm(curr_embs, axis=1, keepdims=True)
+        ref_embs   = ref_embs  / np.where(ref_norms  > 0, ref_norms,  1)
+        curr_embs  = curr_embs / np.where(curr_norms > 0, curr_norms, 1)
+
         feature_mat = (ref_embs @ curr_embs.T + 1) / 2
 
+        # ── Birleştir + Hungarian ──
         combined         = iou_weight * iou_mat + feature_weight * feature_mat
         row_ind, col_ind = linear_sum_assignment(1 - combined)
 
@@ -129,6 +108,7 @@ class Planogram(Capsule):
         )
 
         compatibility_score = round(matched_count / n_ref * 100, 2)
+
         self.request.data["compatibilityScore"] = compatibility_score
         self.data = str(compatibility_score)
 

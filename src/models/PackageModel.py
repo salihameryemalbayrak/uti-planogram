@@ -3,38 +3,6 @@ from pydantic import Field, validator
 from typing import List, Optional, Union, Literal
 from sdks.novavision.src.base.model import Package, Image, Inputs, Configs, Outputs, Response, Detection, Request, Output, Input, Config
 
-class InputImageOne(Input):
-    name: Literal["inputImageOne"] = "inputImageOne"
-    value: Union[List[Image], Image]
-    type: str = "object"
-
-    @validator("type", pre=True, always=True)
-    def set_type_based_on_value(cls, value, values):
-        value = values.get('value')
-        if isinstance(value, Image):
-            return "object"
-        elif isinstance(value, list):
-            return "list"
-
-    class Config:
-        title = "Image"
-
-
-class InputImageTwo(Input):
-    name: Literal["inputImageTwo"] = "inputImageTwo"
-    value: Union[List[Image], Image]
-    type: str = "object"
-
-    @validator("type", pre=True, always=True)
-    def set_type_based_on_value(cls, value, values):
-        value = values.get('value')
-        if isinstance(value, Image):
-            return "object"
-        elif isinstance(value, list):
-            return "list"
-
-    class Config:
-        title = "Image"
 
 class InputReferenceDetections(Input):
     name: Literal["inputReferenceDetections"] = "inputReferenceDetections"
@@ -42,7 +10,8 @@ class InputReferenceDetections(Input):
     type: Literal["list"] = "list"
 
     class Config:
-        title = "Reference"
+        title = "Reference Detections"
+
 
 class InputTestDetections(Input):
     name: Literal["inputTestDetections"] = "inputTestDetections"
@@ -50,18 +19,37 @@ class InputTestDetections(Input):
     type: Literal["list"] = "list"
 
     class Config:
-        title = "Test"
+        title = "Test Detections"
+
+
+class InputReferenceEmbeddings(Input):
+    name: Literal["inputReferenceEmbeddings"] = "inputReferenceEmbeddings"
+    value: List
+    type: Literal["list"] = "list"
+
+    class Config:
+        title = "Reference Embeddings"
+
+
+class InputTestEmbeddings(Input):
+    name: Literal["inputTestEmbeddings"] = "inputTestEmbeddings"
+    value: List
+    type: Literal["list"] = "list"
+
+    class Config:
+        title = "Test Embeddings"
 
 
 class OutputData(Output):
     name: Literal["outputData"] = "outputData"
-    value: Union[ str, list]
+    value: Union[str, list]
     type: str = "object"
+
 
 class FeatureWeight(Config):
     """
-        Weight multiplier applied to the visual feature similarity score (extracted via CLIP embeddings)
-        when calculating the combined compatibility score between reference and test detections.
+    Weight multiplier applied to the visual feature similarity score (extracted via CLIP embeddings)
+    when calculating the combined compatibility score between reference and test detections.
     """
     name: Literal["featureWeight"] = "featureWeight"
     value: float
@@ -71,10 +59,11 @@ class FeatureWeight(Config):
     class Config:
         title = "Visual similarity weight."
 
+
 class IouWeight(Config):
     """
-       Weight multiplier applied to the spatial Intersection over Union (IoU) overlap score
-       when calculating the combined compatibility score between reference and test detections.
+    Weight multiplier applied to the spatial Intersection over Union (IoU) overlap score
+    when calculating the combined compatibility score between reference and test detections.
     """
     name: Literal["iouWeight"] = "iouWeight"
     value: float
@@ -84,10 +73,11 @@ class IouWeight(Config):
     class Config:
         title = "Spatial overlap weight."
 
+
 class Treshold(Config):
     """
-       The minimum combined score (IoU + Feature similarity) required for a reference
-       and test detection pair to be considered a successful match.
+    The minimum combined score (IoU + Feature similarity) required for a reference
+    and test detection pair to be considered a successful match.
     """
     name: Literal["treshold"] = "treshold"
     value: float
@@ -97,11 +87,12 @@ class Treshold(Config):
     class Config:
         title = "Treshold"
 
+
 class PlanogramInputs(Inputs):
     inputReferenceDetections: InputReferenceDetections
     inputTestDetections: InputTestDetections
-    inputImageTwo: InputImageTwo
-    inputImageOne: InputImageOne
+    inputReferenceEmbeddings: InputReferenceEmbeddings
+    inputTestEmbeddings:      InputTestEmbeddings
 
 
 class PlanogramConfigs(Configs):
