@@ -44,7 +44,6 @@ class Planogram(Capsule):
 
         compatibility_score = 0.0
 
-        # ── Detection parse ──
         def parse_boxes(detections):
             boxes = []
             for d in detections:
@@ -56,7 +55,6 @@ class Planogram(Capsule):
                 boxes.append([x1, y1, x2, y2])
             return boxes
 
-        # ── Embedding parse — ClipImage çıktısı ──
         def parse_embeddings(embeddings):
             return np.array([e["embedding"] for e in embeddings])
 
@@ -74,7 +72,6 @@ class Planogram(Capsule):
         ref_embs  = parse_embeddings(self.inputReferenceEmbeddings)
         curr_embs = parse_embeddings(self.inputTestEmbeddings)
 
-        # ── IoU matrisi ──
         def compute_iou(b1, b2):
             x1 = max(b1[0], b2[0]);  y1 = max(b1[1], b2[1])
             x2 = min(b1[2], b2[2]);  y2 = min(b1[3], b2[3])
@@ -89,8 +86,6 @@ class Planogram(Capsule):
             for j, cb in enumerate(curr_boxes):
                 iou_mat[i, j] = compute_iou(rb, cb)
 
-        # ── Feature matrisi ──
-        # Embedding'ler normalize edilmemişse normalize et
         ref_norms  = np.linalg.norm(ref_embs,  axis=1, keepdims=True)
         curr_norms = np.linalg.norm(curr_embs, axis=1, keepdims=True)
         ref_embs   = ref_embs  / np.where(ref_norms  > 0, ref_norms,  1)
@@ -98,7 +93,6 @@ class Planogram(Capsule):
 
         feature_mat = (ref_embs @ curr_embs.T + 1) / 2
 
-        # ── Birleştir + Hungarian ──
         combined         = iou_weight * iou_mat + feature_weight * feature_mat
         row_ind, col_ind = linear_sum_assignment(1 - combined)
 
